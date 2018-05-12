@@ -4,6 +4,7 @@ import json
 from operator import itemgetter
 import os
 import logging
+import string
 import urllib.request
 
 import jinja2
@@ -62,21 +63,24 @@ def lambda_handler(event, context):
     c7n_message = lib.c7n.decode_message(encoded_message)
     resource_type = c7n_message['policy']['resource']
     resources_data = c7n_message['resources']
+    region = c7n_message['region']
 
     resources = []
     for resource in resources_data:
-        resources.append(
-            lib.resources.get_resource_info(
-                resource_type,
-                resource,
-                resource_mappings=resource_mappings[resource_type]
-            )
+        resource_info = lib.resources.get_resource_info(
+            resource_type,
+            resource,
+            resource_mappings=resource_mappings[resource_type]
         )
+        # Adding region to resource_info makes rendering the resource link
+        # easier
+        resource_info['region'] = region
+        resources.append(resource_info)
 
     logger.debug("resources: {}".format(resources))
 
     # Sort resources by CreationDateTime
-    resources.sort(key=itemgetter('CreationDateTime'), reverse=True)
+    resources.sort(key=itemgetter('creation_datetime'), reverse=True)
 
     # Formatting resource info in Python since slack doesn't support robust
     # formatting.
@@ -89,19 +93,27 @@ def lambda_handler(event, context):
     for resource in resources:
         # If creator tag is not set then JMESpath returns an empty list
         # in this case set the creator to unknown
-        if len(resource['Creator']) == 0:
+        if len(resource['creator']) == 0:
             creator = "unknown"
         else:
-            creator = resource['Creator'][0]
+            creator = resource['creator'][0]
+
+        if resource.get('link'):
+            resource_link = string.Template(
+                resource['link']
+            ).substitute(resource)
+            resource_id = '<{}|{}>'.format(resource_link, resource['id'])
+        else:
+            resource_id = resource['id']
         formatted_lines.append(
-            line_layout.format(resource['ResourceId'],
-                               str(resource['CreationDateTime']),
+            line_layout.format(resource_id,
+                               str(resource['creation_datetime']),
                                creator)
         )
 
     slack_message_info = {}
     slack_message_info['account_id'] = c7n_message['account_id']
-    slack_message_info['region'] = c7n_message['region']
+    slack_message_info['region'] = region
     slack_message_info['resource_type'] = resource_type
     slack_message_info['resources'] = "\n".join(formatted_lines)
 

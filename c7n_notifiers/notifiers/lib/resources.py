@@ -27,9 +27,10 @@ def get_resource_info(resource_type, resource_data, resource_mappings=None):
         resource_mappings = all_resource_mappings[resource_type]
 
     resource_info = {}
-    for name, path in resource_mappings.items():
+    resource_info['link'] = resource_mappings.get('link')
+    for name, path in resource_mappings['info'].items():
         resource_info[name] = jmespath.search(path, resource_data)
-        if name == 'CreationDateTime':
+        if name == 'creation_datetime':
             resource_info[name] = datetime.strptime(resource_info[name],
                                                     '%Y-%m-%dT%H:%M:%S+00:00')
     return resource_info

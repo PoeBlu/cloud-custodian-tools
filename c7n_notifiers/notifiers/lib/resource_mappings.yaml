@@ -1,4 +1,8 @@
 ec2:
-  ResourceId: InstanceId
-  CreationDateTime: LaunchTime
-  Creator: Tags[?Key=='Creator'].Value
+  link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#Instances:instanceId=${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: LaunchTime
+    id: InstanceId
+
+
