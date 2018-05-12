@@ -1,6 +1,6 @@
-I am the Cloud Custodian {{ resource_type }} reaper for {{ account_id }} {{ region }}
+*Cloud Custodian {{ resource_type }} reaper for {{ account_id }} {{ region }}*
 
-I would have delete the following resources:
+I would have delete the following resources. All times in UTC.
 
 ```
 {{ resources}}
