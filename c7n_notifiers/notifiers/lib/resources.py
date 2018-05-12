@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import os
 
@@ -28,5 +29,7 @@ def get_resource_info(resource_type, resource_data, resource_mappings=None):
     resource_info = {}
     for name, path in resource_mappings.items():
         resource_info[name] = jmespath.search(path, resource_data)
-
+        if name == 'CreationDateTime':
+            resource_info[name] = datetime.strptime(resource_info[name],
+                                                    '%Y-%m-%dT%H:%M:%S+00:00')
     return resource_info

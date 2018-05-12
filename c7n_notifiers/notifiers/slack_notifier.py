@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+from operator import itemgetter
 import os
 import logging
 import urllib.request
@@ -33,7 +34,6 @@ def send_slack_message(webhook_url, message):
              }
         ]
     }
-
 
     message_json = json.dumps(message_body)
     post_data = message_json.encode('utf8')
@@ -73,6 +73,9 @@ def lambda_handler(event, context):
 
     logger.debug("resources: {}".format(resources))
 
+    # Sort resources by CreationDateTime
+    resources.sort(key=itemgetter('CreationDateTime'), reverse=True)
+
     # Formatting resource info in Python since slack doesn't support robust
     # formatting.
     formatted_lines = []
@@ -90,7 +93,7 @@ def lambda_handler(event, context):
             creator = resource['Creator'][0]
         formatted_lines.append(
             line_layout.format(resource['ResourceId'],
-                               resource['CreationDateTime'],
+                               str(resource['CreationDateTime']),
                                creator)
         )
 
