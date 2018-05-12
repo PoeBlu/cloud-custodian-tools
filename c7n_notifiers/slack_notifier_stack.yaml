@@ -23,8 +23,9 @@ Resources:
   SlackNotifierFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Code: slack
-      Handler: c7n_slack_notifier.lambda_handler
+      # deploy.sh creates lambda package in scratch prior to running cfn package
+      Code: scratch/notifiers
+      Handler: slack_notifier.lambda_handler
       Role: !GetAtt SlackNotifierFunctionRole.Arn
       Runtime: python3.6
       Environment:
@@ -47,6 +48,8 @@ Resources:
       Principal: sns.amazonaws.com
       SourceArn: !Ref SnsTopic
 
-
+Outputs:
+  SnsTopicArn:
+    Value: !Ref SnsTopic
 
 

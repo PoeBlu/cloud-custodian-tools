@@ -61,15 +61,3 @@ def lambda_handler(event, context):
     send_slack_message(webhook_url, str(message))
 
 
-def get_resource_info(resource_type, resource_data):
-    if resource_type == 'ec2':
-        return get_ec2_info(resource_data)
-
-
-def get_ec2_info(resource_data):
-    resource_id = resource_data['InstanceId']
-    creation_date = resource_data['LaunchTime']
-    resource_info = (resource_id, creation_date)
-    return resource_info
-
-
