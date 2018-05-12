@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from datetime import datetime
 import json
 from operator import itemgetter
 import os
@@ -29,8 +30,9 @@ def send_slack_message(webhook_url, message):
     message_body = {
         'attachments': [
             {
-                'text': message,
-                'color': 'warning'
+                'color': 'warning',
+                'footer': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+                'text': message
              }
         ]
     }
