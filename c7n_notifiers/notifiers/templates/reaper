@@ -1,0 +1,7 @@
+I am the Cloud Custodian {{ ResourceType }} reaper for {{ AccountId }} {{ Region }}
+
+I would have delete the following resources:
+
+```
+{{ Resources}}
+```

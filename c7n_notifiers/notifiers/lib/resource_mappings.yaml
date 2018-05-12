@@ -1,0 +1,4 @@
+ec2:
+  ResourceId: InstanceId
+  CreationDateTime: LaunchTime
+  Creator: Tags[?Key=='Creator'].Value

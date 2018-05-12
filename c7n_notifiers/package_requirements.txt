@@ -1,6 +1,4 @@
-certifi==2018.4.16
-chardet==3.0.4
-idna==2.6
+Jinja2==2.10
 jmespath==0.9.3
+MarkupSafe==1.0
 PyYAML==3.12
-urllib3==1.22
