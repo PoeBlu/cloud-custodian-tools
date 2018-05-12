@@ -25,7 +25,16 @@ def send_slack_message(webhook_url, message):
     logger.debug(
         "Sending message to slack webhook {}: {}".format(webhook_url, message)
     )
-    message_body = {'text': message}
+    message_body = {
+        'attachments': [
+            {
+                'text': message,
+                'color': 'warning'
+             }
+        ]
+    }
+
+
     message_json = json.dumps(message_body)
     post_data = message_json.encode('utf8')
     req = urllib.request.Request(webhook_url,
