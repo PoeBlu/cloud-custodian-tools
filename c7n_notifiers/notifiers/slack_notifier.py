@@ -98,10 +98,10 @@ def lambda_handler(event, context):
         )
 
     slack_message_info = {}
-    slack_message_info['AccountId'] = c7n_message['account_id']
-    slack_message_info['Region'] = c7n_message['region']
-    slack_message_info['ResourceType'] = resource_type
-    slack_message_info['Resources'] = "\n".join(formatted_lines)
+    slack_message_info['account_id'] = c7n_message['account_id']
+    slack_message_info['region'] = c7n_message['region']
+    slack_message_info['resource_type'] = resource_type
+    slack_message_info['resources'] = "\n".join(formatted_lines)
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     template_path = current_dir + "/templates"

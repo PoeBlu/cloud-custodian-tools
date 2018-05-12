@@ -1,7 +1,7 @@
-I am the Cloud Custodian {{ ResourceType }} reaper for {{ AccountId }} {{ Region }}
+I am the Cloud Custodian {{ resource_type }} reaper for {{ account_id }} {{ region }}
 
 I would have delete the following resources:
 
 ```
-{{ Resources}}
+{{ resources}}
 ```
