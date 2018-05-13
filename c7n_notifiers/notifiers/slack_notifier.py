@@ -72,10 +72,10 @@ def lambda_handler(event, context):
     region = c7n_message['region']
 
     resources = []
-    for resource in resources_data:
+    for resource_info in resources_data:
         resource_info = lib.resources.get_resource_info(
             resource_type,
-            resource,
+            resource_info,
             resource_mappings=resource_mappings[resource_type]
         )
         # Adding region to resource_info makes rendering the resource link
@@ -91,54 +91,72 @@ def lambda_handler(event, context):
     # Formatting resource info in Python since slack doesn't support robust
     # formatting.
     formatted_lines = []
-    line_layout = "{:<{resource_pad}}  {:<15}  {:<19}  {}"
+    resource_id_pad = 22
+    resource_name_pad = 15
+    creation_dt_pad = 19
+    creator_pad = 12
+    line_layout = (
+        "{:<{resource_id_pad}}  {:<{resource_name_pad}}  "
+        "{:<{creation_dt_pad}}  {:<{creator_pad}}"
+    )
     header_line = line_layout.format("ResourceId",
                                      "ResourceName",
                                      "CreationDateTime",
                                      "Creator",
-                                     resource_pad=22)
+                                     resource_id_pad=resource_id_pad,
+                                     resource_name_pad=resource_name_pad,
+                                     creation_dt_pad=creation_dt_pad,
+                                     creator_pad=creator_pad
+                                     )
     formatted_lines.append(header_line)
-    for resource in resources:
+    for resource_info in resources:
         # If Name is a tag and is not set then JMESpath returns an empty list
         # in this case set the Name to empty
-        if type(resource['name']) is list:
-            if len(resource['name']) == 0:
+        if type(resource_info['name']) is list:
+            if len(resource_info['name']) == 0:
                 name = ""
             else:
-                name = resource['name'][0][:13]
+                name = resource_info['name'][0][:resource_name_pad]
         else:
-            name = resource['name'][:13]
+            name = resource_info['name'][:resource_name_pad]
 
         # If Creator tag is not set then JMESpath returns an empty list
         # in this case set the creator to empty
-        if len(resource['creator']) == 0:
+        if len(resource_info['creator']) == 0:
             creator = ""
         else:
-            creator = resource['creator'][0][:12]
+            creator = resource_info['creator'][0][:creator_pad]
 
-        if resource.get('link'):
-            resource_link = string.Template(
-                resource['link']
-            ).substitute(resource)
-            resource_id = '<{}|{}>'.format(resource_link, resource['id'])
-            # Strange padding is needed as slack renders the link, which
-            # removes many characters on screen, so need to compensate
-            resource_pad = len(resource_id) - len(resource['id']) + 22
+        resource = resource_info['id'][:resource_id_pad]
+        # Padding needs to be calculated for each resource id as slack renders
+        # the link, which removes many characters on screen,
+        # so need to add white space to compensate the removal of characters
+        # when rendered.
+        resource_pad = resource_id_pad
+        if resource_info.get('url'):
+            resource_url = string.Template(
+                resource_info['url']
+            ).substitute(resource_info)
+            resource_link = '<{}|{}>'.format(resource_url, resource)
+            resource_pad = (
+                len(resource_link) - len(resource) + resource_id_pad
+            )
+            resource = resource_link
 
-        else:
-            resource_id = resource['id']
-            resource_pad = 22
-
-        datetime_string = resource['creation_datetime'].strftime(
+        datetime_string = resource_info['creation_datetime'].strftime(
             '%Y-%m-%d %H:%M:%S'
         )
 
         formatted_lines.append(
-            line_layout.format(resource_id,
+            line_layout.format(resource,
                                name,
                                datetime_string,
                                creator,
-                               resource_pad=resource_pad)
+                               resource_id_pad=resource_pad,
+                               resource_name_pad=resource_name_pad,
+                               creation_dt_pad=creation_dt_pad,
+                               creator_pad=creator_pad
+            )
         )
 
     slack_message_info = {}

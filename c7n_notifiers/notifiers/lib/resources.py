@@ -53,7 +53,7 @@ def get_resource_info(resource_type, resource_data, resource_mappings=None):
         resource_mappings = all_resource_mappings[resource_type]
 
     resource_info = {}
-    resource_info['link'] = resource_mappings.get('link')
+    resource_info['url'] = resource_mappings.get('url')
     for name, path in resource_mappings['info'].items():
         resource_info[name] = jmespath.search(path, resource_data)
         if name == 'creation_datetime':

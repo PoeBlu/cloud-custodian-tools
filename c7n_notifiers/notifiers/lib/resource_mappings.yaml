@@ -1,5 +1,5 @@
 asg:
-  link: "https://console.aws.amazon.com/ec2/autoscaling/home?region=${region}#AutoScalingGroups:id=${id}"
+  url: "https://console.aws.amazon.com/ec2/autoscaling/home?region=${region}#AutoScalingGroups:id=${id}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: CreatedTime
@@ -7,7 +7,7 @@ asg:
     name: AutoScalingGroupName
 
 app-elb:
-  link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#LoadBalancers:search=${id}"
+  url: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#LoadBalancers:search=${id}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: CreatedTime
@@ -15,7 +15,7 @@ app-elb:
     name: LoadBalancerName
 
 dynamodb-table:
-  link: "https://console.aws.amazon.com/dynamodb/home?region=${region}#tables:selected=${name}"
+  url: "https://console.aws.amazon.com/dynamodb/home?region=${region}#tables:selected=${name}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: CreationDateTime
@@ -23,7 +23,7 @@ dynamodb-table:
     name: TableName
 
 cache-cluster:
-  link: "https://console.aws.amazon.com/elasticache/home?region=${region}#redis-nodes:id=${id}"
+  url: "https://console.aws.amazon.com/elasticache/home?region=${region}#redis-nodes:id=${id}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: CacheClusterCreateTime
@@ -31,7 +31,7 @@ cache-cluster:
     name: CacheClusterId
 
 ebs:
-  link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#Volumes:volumeId=${id}"
+  url: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#Volumes:volumeId=${id}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: CreateTime
@@ -39,7 +39,7 @@ ebs:
     name: Tags[?Key=='Name'].Value
 
 ec2:
-  link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#Instances:instanceId=${id}"
+  url: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#Instances:instanceId=${id}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: LaunchTime
@@ -47,7 +47,7 @@ ec2:
     name: Tags[?Key=='Name'].Value
 
 efs:
-  link: "https://console.aws.amazon.com/efs/home?region=${region}#/filesystems/${id}"
+  url: "https://console.aws.amazon.com/efs/home?region=${region}#/filesystems/${id}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: CreationTime
@@ -55,7 +55,7 @@ efs:
     name: Tags[?Key=='Name'].Value
 
 elasticbeanstalk-environment:
-  link: "https://console.aws.amazon.com/elasticbeanstalk/home?region=${region}#application/overview?applicationName=${name}"
+  url: "https://console.aws.amazon.com/elasticbeanstalk/home?region=${region}#application/overview?applicationName=${name}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: DateCreated
@@ -63,9 +63,41 @@ elasticbeanstalk-environment:
     name: ApplicationName
 
 elb:
-  link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#LoadBalancers:search=${id}"
+  url: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#LoadBalancers:search=${id}"
   info:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: CreatedTime
     id: LoadBalancerName
     name: LoadBalancerName
+
+emr:
+  url: "https://console.aws.amazon.com/elasticmapreduce/home?region=${region}#cluster-details:${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: Status.Timeline.CreationDateTime
+    id: Id
+    name: Name
+
+rds:
+  url: "https://console.aws.amazon.com/rds/home?region=${region}#dbinstance:id=${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: InstanceCreateTime
+    id: DBInstanceIdentifier
+    name: DBInstanceIdentifier
+
+redshift:
+  url: "https://console.aws.amazon.com/redshift/home?region=${region}#cluster-details:cluster=${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: ClusterCreateTime
+    id: ClusterIdentifier
+    name: ClusterIdentifier
+
+s3:
+  url: "https://s3.console.aws.amazon.com/s3/buckets/${id}/?region=${region}&tab=overview"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: CreationDate
+    id: Name
+    name: Name
