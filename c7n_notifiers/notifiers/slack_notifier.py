@@ -85,18 +85,26 @@ def lambda_handler(event, context):
     # Formatting resource info in Python since slack doesn't support robust
     # formatting.
     formatted_lines = []
-    line_layout = "{:<19}   {:<19}   {}"
+    line_layout = "{:<19}  {:<15}  {:<19}  {}"
     header_line = line_layout.format("ResourceId",
+                                     "ResourceName",
                                      "CreationDateTime",
                                      "Creator")
     formatted_lines.append(header_line)
     for resource in resources:
-        # If creator tag is not set then JMESpath returns an empty list
-        # in this case set the creator to unknown
-        if len(resource['creator']) == 0:
-            creator = "unknown"
+        # If Name tag is not set then JMESpath returns an empty list
+        # in this case set the Name to empty
+        if len(resource['name']) == 0:
+            name = ""
         else:
-            creator = resource['creator'][0]
+            name = resource['name'][0][:15]
+
+        # If Creator tag is not set then JMESpath returns an empty list
+        # in this case set the creator to empty
+        if len(resource['creator']) == 0:
+            creator = ""
+        else:
+            creator = resource['creator'][0][:15]
 
         if resource.get('link'):
             resource_link = string.Template(
@@ -107,6 +115,7 @@ def lambda_handler(event, context):
             resource_id = resource['id']
         formatted_lines.append(
             line_layout.format(resource_id,
+                               name,
                                str(resource['creation_datetime']),
                                creator)
         )

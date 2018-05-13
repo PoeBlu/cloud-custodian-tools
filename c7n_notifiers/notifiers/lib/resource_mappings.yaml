@@ -4,5 +4,6 @@ ec2:
     creator: Tags[?Key=='Creator'].Value
     creation_datetime: LaunchTime
     id: InstanceId
+    name: Tags[?Key=='Name'].Value
 
 
