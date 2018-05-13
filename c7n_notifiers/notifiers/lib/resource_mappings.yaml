@@ -22,6 +22,14 @@ dynamodb-table:
     id: TableName
     name: TableName
 
+cache-cluster:
+  link: "https://console.aws.amazon.com/elasticache/home?region=${region}#redis-nodes:id=${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: CacheClusterCreateTime
+    id: CacheClusterId
+    name: CacheClusterId
+
 ebs:
   link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#Volumes:volumeId=${id}"
   info:
@@ -37,3 +45,27 @@ ec2:
     creation_datetime: LaunchTime
     id: InstanceId
     name: Tags[?Key=='Name'].Value
+
+efs:
+  link: "https://console.aws.amazon.com/efs/home?region=${region}#/filesystems/${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: CreationTime
+    id: FileSystemId
+    name: Tags[?Key=='Name'].Value
+
+elasticbeanstalk-environment:
+  link: "https://console.aws.amazon.com/elasticbeanstalk/home?region=${region}#application/overview?applicationName=${name}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: DateCreated
+    id: EnvironmentName
+    name: ApplicationName
+
+elb:
+  link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#LoadBalancers:search=${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: CreatedTime
+    id: LoadBalancerName
+    name: LoadBalancerName
