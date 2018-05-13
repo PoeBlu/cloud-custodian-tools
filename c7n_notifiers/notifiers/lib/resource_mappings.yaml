@@ -1,3 +1,11 @@
+asg:
+  link: "https://console.aws.amazon.com/ec2/autoscaling/home?region=${region}#AutoScalingGroups:id=${id}"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: CreatedTime
+    id: AutoScalingGroupName
+    name: AutoScalingGroupName
+
 ec2:
   link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#Instances:instanceId=${id}"
   info:
@@ -5,5 +13,15 @@ ec2:
     creation_datetime: LaunchTime
     id: InstanceId
     name: Tags[?Key=='Name'].Value
+
+app-elb:
+  link: "https://console.aws.amazon.com/ec2/v2/home?region=${region}#LoadBalancers:search=${id};sort=loadBalancerName"
+  info:
+    creator: Tags[?Key=='Creator'].Value
+    creation_datetime: CreatedTime
+    id: LoadBalancerName
+    name: LoadBalancerName
+
+
 
 

@@ -28,11 +28,14 @@ def send_slack_message(webhook_url, message):
     logger.debug(
         "Sending message to slack webhook {}: {}".format(webhook_url, message)
     )
+    footer_text = "{} - All times in UTC".format(
+        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    )
     message_body = {
         'attachments': [
             {
                 'color': 'warning',
-                'footer': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
+                'footer': footer_text,
                 'text': message
              }
         ]
@@ -88,19 +91,23 @@ def lambda_handler(event, context):
     # Formatting resource info in Python since slack doesn't support robust
     # formatting.
     formatted_lines = []
-    line_layout = "{:<19}  {:<15}  {:<19}  {}"
+    line_layout = "{:<{resource_pad}}  {:<15}  {:<19}  {}"
     header_line = line_layout.format("ResourceId",
                                      "ResourceName",
                                      "CreationDateTime",
-                                     "Creator")
+                                     "Creator",
+                                     resource_pad=19)
     formatted_lines.append(header_line)
     for resource in resources:
-        # If Name tag is not set then JMESpath returns an empty list
+        # If Name is a tag and is not set then JMESpath returns an empty list
         # in this case set the Name to empty
-        if len(resource['name']) == 0:
-            name = ""
+        if type(resource['name']) is list:
+            if len(resource['name']) == 0:
+                name = ""
+            else:
+                name = resource['name'][0][:15]
         else:
-            name = resource['name'][0][:15]
+            name = resource['name'][:15]
 
         # If Creator tag is not set then JMESpath returns an empty list
         # in this case set the creator to empty
@@ -114,13 +121,24 @@ def lambda_handler(event, context):
                 resource['link']
             ).substitute(resource)
             resource_id = '<{}|{}>'.format(resource_link, resource['id'])
+            # Strange padding is needed as slack renders the link, which
+            # removes many characters on screen, so need to compensate
+            resource_pad = len(resource_id) - len(resource['id']) + 19
+
         else:
             resource_id = resource['id']
+            resource_pad = 19
+
+        datetime_string = resource['creation_datetime'].strftime(
+            '%Y-%m-%d %H:%M:%S'
+        )
+
         formatted_lines.append(
             line_layout.format(resource_id,
                                name,
-                               str(resource['creation_datetime']),
-                               creator)
+                               datetime_string,
+                               creator,
+                               resource_pad=resource_pad)
         )
 
     slack_message_info = {}
