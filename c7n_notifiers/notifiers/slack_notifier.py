@@ -85,7 +85,7 @@ def lambda_handler(event, context):
     # Formatting resource info in Python since slack doesn't support robust
     # formatting.
     formatted_lines = []
-    line_layout = "{:<22} {:<22} {}"
+    line_layout = "{:<19}   {:<19}   {}"
     header_line = line_layout.format("ResourceId",
                                      "CreationDateTime",
                                      "Creator")
@@ -112,7 +112,14 @@ def lambda_handler(event, context):
         )
 
     slack_message_info = {}
-    slack_message_info['account_id'] = c7n_message['account_id']
+    if c7n_message['account'] != '':
+        slack_message_info['account_info'] = "{} ({})".format(
+            c7n_message['account_id'],
+            c7n_message['account']
+        )
+    else:
+        slack_message_info['account_info'] = c7n_message['account_id']
+
     slack_message_info['region'] = region
     slack_message_info['resource_type'] = resource_type
     slack_message_info['resources'] = "\n".join(formatted_lines)

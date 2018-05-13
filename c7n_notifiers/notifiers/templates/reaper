@@ -1,8 +1,8 @@
-*Cloud Custodian {{ resource_type }} reaper for {{ account_id }} {{ region }}*
+*Cloud Custodian {{ resource_type }} Reaper for {{ account_info }} {{ region }}*
 
 I would have delete the following resources. All times in UTC.
 
-Clicking on a ResourceId will take you to the resource in the console. But, you must be logged into account `{{ account_id }}`.
+Clicking on a ResourceId will take you to the resource in the console. But, you must be logged into account `{{ account_info }}`.
 
 ```
 {{ resources }}
