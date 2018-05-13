@@ -96,7 +96,7 @@ def lambda_handler(event, context):
                                      "ResourceName",
                                      "CreationDateTime",
                                      "Creator",
-                                     resource_pad=19)
+                                     resource_pad=22)
     formatted_lines.append(header_line)
     for resource in resources:
         # If Name is a tag and is not set then JMESpath returns an empty list
@@ -105,16 +105,16 @@ def lambda_handler(event, context):
             if len(resource['name']) == 0:
                 name = ""
             else:
-                name = resource['name'][0][:15]
+                name = resource['name'][0][:13]
         else:
-            name = resource['name'][:15]
+            name = resource['name'][:13]
 
         # If Creator tag is not set then JMESpath returns an empty list
         # in this case set the creator to empty
         if len(resource['creator']) == 0:
             creator = ""
         else:
-            creator = resource['creator'][0][:15]
+            creator = resource['creator'][0][:12]
 
         if resource.get('link'):
             resource_link = string.Template(
@@ -123,11 +123,11 @@ def lambda_handler(event, context):
             resource_id = '<{}|{}>'.format(resource_link, resource['id'])
             # Strange padding is needed as slack renders the link, which
             # removes many characters on screen, so need to compensate
-            resource_pad = len(resource_id) - len(resource['id']) + 19
+            resource_pad = len(resource_id) - len(resource['id']) + 22
 
         else:
             resource_id = resource['id']
-            resource_pad = 19
+            resource_pad = 22
 
         datetime_string = resource['creation_datetime'].strftime(
             '%Y-%m-%d %H:%M:%S'
