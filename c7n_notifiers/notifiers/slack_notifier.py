@@ -48,12 +48,6 @@ def send_slack_message(webhook_url, message):
 
 
 def lambda_handler(event, context):
-    webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
-    if webhook_url is None:
-        raise RuntimeError(
-            "Env Var SLACK_WEBHOOK_URL must be set"
-        )
-
     encoded_message = event['Records'][0]['Sns']['Message']
     logger.debug(
         "Received encoded message from Cloud Custodian: {}".format(
@@ -61,6 +55,15 @@ def lambda_handler(event, context):
         )
     )
     c7n_message = lib.c7n.decode_message(encoded_message)
+    # Currently assume one webhook url, maybe add support for multiples in
+    # the future
+    if len(c7n_message['action']['to']) > 1:
+        logger.warning(
+            "More than one destination (i.e. 'to') has been specified, "
+            "but only using the first one. "
+        )
+    webhook_url = c7n_message['action']['to'][0]
+    message_template = c7n_message['action']['template']
     resource_type = c7n_message['policy']['resource']
     resources_data = c7n_message['resources']
     region = c7n_message['region']
@@ -138,7 +141,7 @@ def lambda_handler(event, context):
     jinja_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(template_path)
     )
-    slack_message_template = jinja_env.get_template('reaper')
+    slack_message_template = jinja_env.get_template(message_template)
     slack_message = slack_message_template.render(**slack_message_info)
 
     send_slack_message(webhook_url, slack_message)

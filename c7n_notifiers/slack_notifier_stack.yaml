@@ -1,11 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Deploys a c7n_notifier stack including Lambda and SNS topic
 
-Parameters:
-  SlackWebhookUrl:
-    Type: String
-    Description: Webhook of the Slack App that will be used to send the notification
-
 Resources:
   SlackNotifierFunctionRole:
     Type: AWS::IAM::Role
@@ -28,9 +23,6 @@ Resources:
       Handler: slack_notifier.lambda_handler
       Role: !GetAtt SlackNotifierFunctionRole.Arn
       Runtime: python3.6
-      Environment:
-        Variables:
-          SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
 
   SnsTopic:
     Type: AWS::SNS::Topic
