@@ -1,0 +1,16 @@
+*Exception Encountered*
+
+An exception was encountered while processing a Cloud Custodian message!
+
+Traceback of the encountered exception
+```
+{{ traceback }}
+```
+
+Cloud Custodian Message that generated the exception
+```
+{{ c7n_message }}
+```
+
+
+
