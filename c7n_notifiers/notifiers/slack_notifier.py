@@ -168,10 +168,26 @@ def format_slack_resource_message(message_data):
         body_template
     )
     slack_body = slack_body_template.render(**slack_message_info)
+
+    actions = set()
+    for action_item in message_data['policy']['actions']:
+        if type(action_item) is dict:
+            # If there is an op sepcified add that, otherwise add the type
+            action = action_item.get('op', action_item['type'])
+            actions.add(action)
+        else:
+            actions.add(action_item)
+
+    danger_actions = {'delete', 'terminate'}
+    if actions.intersection(danger_actions):
+        color = 'danger'
+    else:
+        color = 'warning'
+
     slack_message = {
         'title': slack_subject,
         'text': slack_body,
-        'color': 'warning'
+        'color': color
     }
 
     return slack_message
