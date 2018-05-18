@@ -2,6 +2,8 @@
 
 c7n_notifiers is a Lambda Function enabling Cloud Custodian (c7n) to send notifications. Currently only Slack message are supported, but could be extended to support other methods of notifications, such as email, in the future.
 
+This is conceptually the same as [c7n_mailer](https://github.com/capitalone/cloud-custodian/tree/master/tools/c7n_mailer), but after spending a while trying to get that to work, I just ended up writing something to do the job,
+
 ## DESCRIPTION
 
 Cloud Custodian supports sending notifications via SNS. This project includes a CloudFormation template that creates a SNS topic and a Lambda Function subscribed to that topic.
