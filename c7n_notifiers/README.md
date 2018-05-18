@@ -54,4 +54,9 @@ The `reaper` template is specified in the policy above. This would use the `reap
 
 Cloud Custodian must have permissions to send a message to the SNS topic.
 
+## EXAMPLE
+An example of a Slack notification sent by c7n_notifiers.
+
+![](https://github.com/bluechiptek/cloud-custodian-tools/raw/master/c7n_notifiers/c7n_notifier-notification-example.png)
+
 
