@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+import string
 
 import jmespath
 import yaml
@@ -44,7 +45,8 @@ def get_datetime(datetime_string):
     return dt_obj
 
 
-def get_resource_info(resource_type, resource_data, resource_mappings=None):
+def get_resource_info(resource_type, resource_data, region,
+                      resource_mappings=None):
     # Generally the resource mapping is loaded when the Lambda starts and
     # passed when calling the function. This minimizes the times the file
     # needs to be loaded.
@@ -52,11 +54,32 @@ def get_resource_info(resource_type, resource_data, resource_mappings=None):
         all_resource_mappings = get_mappings()
         resource_mappings = all_resource_mappings[resource_type]
 
-    resource_info = {}
-    resource_info['url'] = resource_mappings.get('url')
-    for name, path in resource_mappings['info'].items():
-        resource_info[name] = jmespath.search(path, resource_data)
-        if name == 'creation_datetime':
-            resource_info[name] = get_datetime(resource_info[name])
+    resource_info = {
+        'region': region
+    }
+    # Build initial resource_info dict
+    for key, path in resource_mappings['info'].items():
+        resource_info[key] = jmespath.search(path, resource_data)
+
+    for key, value in resource_info.items():
+        if key == 'creation_datetime':
+            resource_info['creation_datetime'] = get_datetime(value)
+        elif key == 'creator' and type(value) is list:
+            resource_info['creator'] = value[0]
+        # If Name is a tag and is not set then JMESpath returns an empty list
+        # in this case set the Name to empty, otherwise get the only item from
+        # list
+        elif key == 'name' and type(value) is list:
+            if len(resource_info['name']) == 0:
+                resource_info['name'] = ""
+            elif len(resource_info['name']) == 1:
+                resource_info['name'] = value[0]
+
+    if resource_mappings.get('url'):
+        resource_info['url'] = string.Template(
+            resource_mappings['url']
+        ).substitute(resource_info)
+
+    logger.debug("resource_info: {}".format(resource_info))
 
     return resource_info
