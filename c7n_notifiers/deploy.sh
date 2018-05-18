@@ -53,8 +53,6 @@ rsync -a ./${CODE_DIR}/ ./${PACKAGE_DIR}/
 
 pip install --requirement package_requirements.txt --target ${PACKAGE_DIR} --quiet
 
-
-
 aws cloudformation package --template-file ${CFN_TEMPLATE} --s3-prefix deploy --s3-bucket ${BUCKET} --output-template-file ${OUTPUT_TEMPLATE}
 
 # Upload Package
