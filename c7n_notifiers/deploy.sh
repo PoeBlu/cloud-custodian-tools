@@ -10,11 +10,12 @@ case $1 in
         exit 1
 esac
 
-STACK_NAME="CloudCustodian${NOTIFIER_TYPE^}Notifier"
+STACK_NAME="CloudCustodian${NOTIFIER_TYPE}Notifier"
 CFN_TEMPLATE="${NOTIFIER_TYPE}_notifier_stack.yaml"
 SCRATCH_DIR="scratch"
 OUTPUT_TEMPLATE="${SCRATCH_DIR}/deploy_${CFN_TEMPLATE##*/}"
 CODE_DIR="notifiers"
+DEPENDS_DIR="dependencies"
 PACKAGE_DIR="${SCRATCH_DIR}/${CODE_DIR}"
 
 while [[ $# -gt 0 ]] ; do
@@ -49,9 +50,9 @@ if [ -d ${PACKAGE_DIR} ] ; then
     rm -rf ${PACKAGE_DIR}
 fi
 
+rsync -a ./${DEPENDS_DIR}/ ./${PACKAGE_DIR}/
 rsync -a ./${CODE_DIR}/ ./${PACKAGE_DIR}/
-
-pip install --requirement package_requirements.txt --target ${PACKAGE_DIR} --quiet
+#pip install --requirement package_requirements.txt --target ${PACKAGE_DIR} --quiet
 
 aws cloudformation package --template-file ${CFN_TEMPLATE} --s3-prefix deploy --s3-bucket ${BUCKET} --output-template-file ${OUTPUT_TEMPLATE}
 
