@@ -61,9 +61,7 @@ def create_cache(size):
     """Return the cache class for the given size."""
     if size == 0:
         return None
-    if size < 0:
-        return {}
-    return LRUCache(size)
+    return {} if size < 0 else LRUCache(size)
 
 
 def copy_cache(cache):
@@ -93,7 +91,7 @@ def fail_for_missing_callable(string, name):
         try:
             name._fail_with_undefined_error()
         except Exception as e:
-            msg = '%s (%s; did you forget to quote the callable name?)' % (msg, e)
+            msg = f'{msg} ({e}; did you forget to quote the callable name?)'
     raise TemplateRuntimeError(msg)
 
 
@@ -394,7 +392,7 @@ class Environment(object):
         for key, value in iteritems(self.extensions):
             rv.extensions[key] = value.bind(rv)
         if extensions is not missing:
-            rv.extensions.update(load_extensions(rv, extensions))
+            rv.extensions |= load_extensions(rv, extensions)
 
         return _environment_sanity_check(rv)
 
@@ -457,10 +455,7 @@ class Environment(object):
             args.insert(0, context)
         elif getattr(func, 'evalcontextfilter', False):
             if eval_ctx is None:
-                if context is not None:
-                    eval_ctx = context.eval_ctx
-                else:
-                    eval_ctx = EvalContext(self)
+                eval_ctx = context.eval_ctx if context is not None else EvalContext(self)
             args.insert(0, eval_ctx)
         elif getattr(func, 'environmentfilter', False):
             args.insert(0, self)
@@ -581,10 +576,7 @@ class Environment(object):
                                     defer_init=defer_init)
             if raw:
                 return source
-            if filename is None:
-                filename = '<template>'
-            else:
-                filename = encode_filename(filename)
+            filename = '<template>' if filename is None else encode_filename(filename)
             return self._compile(source, filename)
         except TemplateSyntaxError:
             exc_info = sys.exc_info()
@@ -674,7 +666,7 @@ class Environment(object):
                 import imp
                 import marshal
                 py_header = imp.get_magic() + \
-                    u'\xff\xff\xff\xff'.encode('iso-8859-15')
+                        u'\xff\xff\xff\xff'.encode('iso-8859-15')
 
                 # Python 3.3 added a source filesize to the header
                 if sys.version_info >= (3, 3):
@@ -696,11 +688,11 @@ class Environment(object):
             from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED, ZIP_STORED
             zip_file = ZipFile(target, 'w', dict(deflated=ZIP_DEFLATED,
                                                  stored=ZIP_STORED)[zip])
-            log_function('Compiling into Zip archive "%s"' % target)
+            log_function(f'Compiling into Zip archive "{target}"')
         else:
             if not os.path.isdir(target):
                 os.makedirs(target)
-            log_function('Compiling into folder "%s"' % target)
+            log_function(f'Compiling into folder "{target}"')
 
         try:
             for name in self.list_templates(extensions, filter_func):
@@ -710,20 +702,18 @@ class Environment(object):
                 except TemplateSyntaxError as e:
                     if not ignore_errors:
                         raise
-                    log_function('Could not compile "%s": %s' % (name, e))
+                    log_function(f'Could not compile "{name}": {e}')
                     continue
 
                 filename = ModuleLoader.get_module_filename(name)
 
                 if py_compile:
                     c = self._compile(code, encode_filename(filename))
-                    write_file(filename + 'c', py_header +
-                               marshal.dumps(c), 'wb')
-                    log_function('Byte-compiled "%s" as %s' %
-                                 (name, filename + 'c'))
+                    write_file(f'{filename}c', py_header + marshal.dumps(c), 'wb')
+                    log_function(f'Byte-compiled "{name}" as {filename}c')
                 else:
                     write_file(filename, code, 'w')
-                    log_function('Compiled "%s" as %s' % (name, filename))
+                    log_function(f'Compiled "{name}" as {filename}')
         finally:
             if zip:
                 zip_file.close()
@@ -881,9 +871,7 @@ class Environment(object):
 
     def make_globals(self, d):
         """Return a dict for the globals."""
-        if not d:
-            return self.globals
-        return dict(self.globals, **d)
+        return dict(self.globals, **d) if d else self.globals
 
 
 class Template(object):
@@ -1036,8 +1024,7 @@ class Template(object):
         """
         vars = dict(*args, **kwargs)
         try:
-            for event in self.root_render_func(self.new_context(vars)):
-                yield event
+            yield from self.root_render_func(self.new_context(vars))
         except Exception:
             exc_info = sys.exc_info()
         else:
@@ -1109,17 +1096,19 @@ class Template(object):
         """Return the source line number of a line number in the
         generated bytecode as they are not in sync.
         """
-        for template_line, code_line in reversed(self.debug_info):
-            if code_line <= lineno:
-                return template_line
-        return 1
+        return next(
+            (
+                template_line
+                for template_line, code_line in reversed(self.debug_info)
+                if code_line <= lineno
+            ),
+            1,
+        )
 
     @property
     def is_up_to_date(self):
         """If this variable is `False` there is a newer version available."""
-        if self._uptodate is None:
-            return True
-        return self._uptodate()
+        return True if self._uptodate is None else self._uptodate()
 
     @property
     def debug_info(self):
@@ -1128,11 +1117,8 @@ class Template(object):
                 self._debug_info.split('&')]
 
     def __repr__(self):
-        if self.name is None:
-            name = 'memory:%x' % id(self)
-        else:
-            name = repr(self.name)
-        return '<%s %s>' % (self.__class__.__name__, name)
+        name = 'memory:%x' % id(self) if self.name is None else repr(self.name)
+        return f'<{self.__class__.__name__} {name}>'
 
 
 @implements_to_string
@@ -1161,11 +1147,8 @@ class TemplateModule(object):
         return concat(self._body_stream)
 
     def __repr__(self):
-        if self.__name__ is None:
-            name = 'memory:%x' % id(self)
-        else:
-            name = repr(self.__name__)
-        return '<%s %s>' % (self.__class__.__name__, name)
+        name = 'memory:%x' % id(self) if self.__name__ is None else repr(self.__name__)
+        return f'<{self.__class__.__name__} {name}>'
 
 
 class TemplateExpression(object):

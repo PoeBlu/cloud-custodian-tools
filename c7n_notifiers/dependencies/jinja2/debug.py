@@ -159,7 +159,7 @@ def translate_exception(exc_info, initial_skip=0):
     frames = []
 
     # skip some internal frames if wanted
-    for x in range(initial_skip):
+    for _ in range(initial_skip):
         if tb is not None:
             tb = tb.tb_next
     initial_tb = tb
@@ -196,12 +196,7 @@ def translate_exception(exc_info, initial_skip=0):
 
 
 def get_jinja_locals(real_locals):
-    ctx = real_locals.get('context')
-    if ctx:
-        locals = ctx.get_all().copy()
-    else:
-        locals = {}
-
+    locals = ctx.get_all().copy() if (ctx := real_locals.get('context')) else {}
     local_overrides = {}
 
     for name, value in iteritems(real_locals):
@@ -264,7 +259,7 @@ def fake_exc_info(exc_info, filename, lineno):
             if function == 'root':
                 location = 'top-level template code'
             elif function.startswith('block_'):
-                location = 'block "%s"' % function[6:]
+                location = f'block "{function[6:]}"'
             else:
                 location = 'template'
 

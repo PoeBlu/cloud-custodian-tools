@@ -6,10 +6,7 @@ from numbers import Number
 
 
 def _equals(x, y):
-    if _is_special_integer_case(x, y):
-        return False
-    else:
-        return x == y
+    return False if _is_special_integer_case(x, y) else x == y
 
 
 def _is_special_integer_case(x, y):
@@ -51,9 +48,7 @@ def _is_actual_number(x):
     # True
     # >>> isinstance(True, int)
     # True
-    if x is True or x is False:
-        return False
-    return isinstance(x, Number)
+    return False if x is True or x is False else isinstance(x, Number)
 
 
 class Options(object):
@@ -88,8 +83,7 @@ class Visitor(object):
         node_type = node['type']
         method = self._method_cache.get(node_type)
         if method is None:
-            method = getattr(
-                self, 'visit_%s' % node['type'], self.default_visit)
+            method = getattr(self, f"visit_{node['type']}", self.default_visit)
             self._method_cache[node_type] = method
         return method(node, *args, **kwargs)
 
@@ -145,17 +139,15 @@ class TreeInterpreter(Visitor):
                 self.visit(node['children'][0], value),
                 self.visit(node['children'][1], value)
             )
-        else:
-            # Ordering operators are only valid for numbers.
-            # Evaluating any other type with a comparison operator
-            # will yield a None value.
-            left = self.visit(node['children'][0], value)
-            right = self.visit(node['children'][1], value)
-            num_types = (int, float)
-            if not (_is_comparable(left) and
-                    _is_comparable(right)):
-                return None
-            return comparator_func(left, right)
+        # Ordering operators are only valid for numbers.
+        # Evaluating any other type with a comparison operator
+        # will yield a None value.
+        left = self.visit(node['children'][0], value)
+        right = self.visit(node['children'][1], value)
+        num_types = (int, float)
+        if not _is_comparable(left) or not _is_comparable(right):
+            return None
+        return comparator_func(left, right)
 
     def visit_current(self, node, value):
         return value
@@ -216,10 +208,7 @@ class TreeInterpreter(Visitor):
         return result
 
     def visit_slice(self, node, value):
-        if not isinstance(value, list):
-            return None
-        s = slice(*node['children'])
-        return value[s]
+        return value[slice(*node['children'])] if isinstance(value, list) else None
 
     def visit_key_val_pair(self, node, value):
         return self.visit(node['children'][0], value)
@@ -238,10 +227,7 @@ class TreeInterpreter(Visitor):
     def visit_multi_select_list(self, node, value):
         if value is None:
             return None
-        collected = []
-        for child in node['children']:
-            collected.append(self.visit(child, value))
-        return collected
+        return [self.visit(child, value) for child in node['children']]
 
     def visit_or_expression(self, node, value):
         matched = self.visit(node['children'][0], value)
@@ -257,11 +243,7 @@ class TreeInterpreter(Visitor):
 
     def visit_not_expression(self, node, value):
         original_result = self.visit(node['children'][0], value)
-        if original_result is 0:
-            # Special case for 0, !0 should be false, not true.
-            # 0 is not a special cased integer in jmespath.
-            return False
-        return not original_result
+        return False if original_result is 0 else not original_result
 
     def visit_pipe(self, node, value):
         result = value
@@ -312,17 +294,18 @@ class GraphvizVisitor(Visitor):
 
     def visit(self, node, *args, **kwargs):
         self._lines.append('digraph AST {')
-        current = '%s%s' % (node['type'], self._count)
+        current = f"{node['type']}{self._count}"
         self._count += 1
         self._visit(node, current)
         self._lines.append('}')
         return '\n'.join(self._lines)
 
     def _visit(self, node, current):
-        self._lines.append('%s [label="%s(%s)"]' % (
-            current, node['type'], node.get('value', '')))
+        self._lines.append(
+            f"""{current} [label="{node['type']}({node.get('value', '')})"]"""
+        )
         for child in node.get('children', []):
-            child_name = '%s%s' % (child['type'], self._count)
+            child_name = f"{child['type']}{self._count}"
             self._count += 1
-            self._lines.append('  %s -> %s' % (current, child_name))
+            self._lines.append(f'  {current} -> {child_name}')
             self._visit(child, child_name)

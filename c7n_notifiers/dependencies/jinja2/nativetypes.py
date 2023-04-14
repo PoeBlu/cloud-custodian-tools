@@ -88,11 +88,7 @@ class NativeCodeGenerator(CodeGenerator):
             # function would raise an Impossible exception at that point
             try:
                 if frame.eval_ctx.autoescape:
-                    if hasattr(const, '__html__'):
-                        const = const.__html__()
-                    else:
-                        const = escape(const)
-
+                    const = const.__html__() if hasattr(const, '__html__') else escape(const)
                 const = const_finalize(const)
             except Exception:
                 # if something goes wrong here we evaluate the node at runtime
@@ -110,9 +106,9 @@ class NativeCodeGenerator(CodeGenerator):
             if frame.buffer is not None:
                 # for one item we append, for more we extend
                 if len(body) == 1:
-                    self.writeline('%s.append(' % frame.buffer)
+                    self.writeline(f'{frame.buffer}.append(')
                 else:
-                    self.writeline('%s.extend((' % frame.buffer)
+                    self.writeline(f'{frame.buffer}.extend((')
 
                 self.indent()
 
@@ -121,9 +117,9 @@ class NativeCodeGenerator(CodeGenerator):
                     val = repr(native_concat(item))
 
                     if frame.buffer is None:
-                        self.writeline('yield ' + val)
+                        self.writeline(f'yield {val}')
                     else:
-                        self.writeline(val + ',')
+                        self.writeline(f'{val},')
                 else:
                     if frame.buffer is None:
                         self.writeline('yield ', item)
@@ -153,7 +149,6 @@ class NativeCodeGenerator(CodeGenerator):
                 self.outdent()
                 self.writeline(len(body) == 1 and ')' or '))')
 
-        # otherwise we create a format string as this is faster in that case
         else:
             format = []
             arguments = []
@@ -166,7 +161,7 @@ class NativeCodeGenerator(CodeGenerator):
                     arguments.append(item)
 
             self.writeline('yield ')
-            self.write(repr(concat(format)) + ' % (')
+            self.write(f'{repr(concat(format))} % (')
             self.indent()
 
             for argument in arguments:

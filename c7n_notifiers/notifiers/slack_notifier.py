@@ -17,12 +17,10 @@ logger.setLevel(logging.DEBUG)
 
 def send_slack_message(webhook_url, message_dict):
     if type(message_dict) is not dict:
-        raise TypeError(
-            "Slack message must be dict, but is {}".format(type(message))
-        )
+        raise TypeError(f"Slack message must be dict, but is {type(message)}")
 
-    footer_text = "{} - All times in UTC".format(
-        datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    footer_text = (
+        f"{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} - All times in UTC"
     )
 
     color = message_dict.get('color', '#6d6c6c')
@@ -38,10 +36,7 @@ def send_slack_message(webhook_url, message_dict):
         ]
     }
 
-    logger.debug(
-        "Sending message to slack webhook {}: {}".format(webhook_url,
-                                                         message_body)
-    )
+    logger.debug(f"Sending message to slack webhook {webhook_url}: {message_body}")
 
     message_json = json.dumps(message_body)
     post_data = message_json.encode('utf8')
@@ -49,7 +44,7 @@ def send_slack_message(webhook_url, message_dict):
                                  headers={'content-type': 'application/json'},
                                  data=post_data)
     response = urllib.request.urlopen(req)
-    logger.debug("Message response: {}".format(response))
+    logger.debug(f"Message response: {response}")
 
 
 def format_exception_message(c7n_message, exception):
@@ -68,7 +63,7 @@ def format_exception_message(c7n_message, exception):
     }
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    template_path = current_dir + "/templates"
+    template_path = f"{current_dir}/templates"
     subject_template = 'exception.subject'
     body_template = 'exception.body'
     jinja_env = jinja2.Environment(
@@ -79,19 +74,10 @@ def format_exception_message(c7n_message, exception):
     slack_body_template = jinja_env.get_template(body_template)
     slack_body = slack_body_template.render(**slack_message_info)
 
-    slack_message = {
-        'title': slack_subject,
-        'text': slack_body,
-        'color': '#000000'
-    }
-
-    return slack_message
+    return {'title': slack_subject, 'text': slack_body, 'color': '#000000'}
 
 
 def format_slack_resource_message(message_data):
-    # Formatting resource info in Python since slack doesn't support robust
-    # formatting.
-    formatted_lines = []
     resource_id_pad = 22
     resource_name_pad = 15
     creation_dt_pad = 19
@@ -109,7 +95,7 @@ def format_slack_resource_message(message_data):
                                      creation_dt_pad=creation_dt_pad,
                                      creator_pad=creator_pad
                                      )
-    formatted_lines.append(header_line)
+    formatted_lines = [header_line]
     for resource_info in message_data['resources']:
         # Padding needs to be calculated for each resource id as slack renders
         # the link, which removes many characters on screen,
@@ -119,7 +105,7 @@ def format_slack_resource_message(message_data):
         if resource_info.get('url'):
             resource = resource_info['id'][:resource_id_pad]
             resource_url = resource_info['url']
-            resource_link = '<{}|{}>'.format(resource_url, resource)
+            resource_link = f'<{resource_url}|{resource}>'
             resource_pad = (
                 len(resource_link) - len(resource) + resource_id_pad
             )
@@ -154,7 +140,7 @@ def format_slack_resource_message(message_data):
     }
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    template_path = current_dir + "/templates"
+    template_path = f"{current_dir}/templates"
     subject_template = message_data['message_template'] + '.subject'
     body_template = message_data['message_template'] + '.body'
     jinja_env = jinja2.Environment(
@@ -179,26 +165,14 @@ def format_slack_resource_message(message_data):
             actions.add(action_item)
 
     danger_actions = {'delete', 'terminate'}
-    if actions.intersection(danger_actions):
-        color = 'danger'
-    else:
-        color = 'warning'
-
-    slack_message = {
-        'title': slack_subject,
-        'text': slack_body,
-        'color': color
-    }
-
-    return slack_message
+    color = 'danger' if actions.intersection(danger_actions) else 'warning'
+    return {'title': slack_subject, 'text': slack_body, 'color': color}
 
 
 def lambda_handler(event, context):
     encoded_message = event['Records'][0]['Sns']['Message']
     logger.debug(
-        "Received encoded message from Cloud Custodian: {}".format(
-            encoded_message
-        )
+        f"Received encoded message from Cloud Custodian: {encoded_message}"
     )
     c7n_message = lib.messaging.decode_message(encoded_message)
     # Currently assume one webhook url, maybe add support for multiples in

@@ -17,22 +17,16 @@ def decode_message(message):
         message_dict = json.loads(decompressed.decode('utf8'))
     except Exception:
         logger.error(
-            "Unable to decode message for Cloud Custodian. Message received "
-            "was: {}".format(message)
+            f"Unable to decode message for Cloud Custodian. Message received was: {message}"
         )
         raise
-    logger.debug(
-        "Decoded message from Cloud Custodian: {}".format(message_dict)
-    )
+    logger.debug(f"Decoded message from Cloud Custodian: {message_dict}")
     return message_dict
 
 
 def get_message_data(c7n_message):
     if c7n_message['account'] != '':
-        account_info = "{} ({})".format(
-            c7n_message['account_id'],
-            c7n_message['account']
-        )
+        account_info = f"{c7n_message['account_id']} ({c7n_message['account']})"
     else:
         account_info = c7n_message['account_id']
 
@@ -59,6 +53,6 @@ def get_message_data(c7n_message):
         'policy': c7n_message['policy']
     }
 
-    logger.debug("message_data: {}".format(message_data))
+    logger.debug(f"message_data: {message_data}")
 
     return message_data

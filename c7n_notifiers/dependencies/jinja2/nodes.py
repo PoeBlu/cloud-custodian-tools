@@ -63,8 +63,7 @@ class NodeType(type):
 
     def __new__(cls, name, bases, d):
         for attr in 'fields', 'attributes':
-            storage = []
-            storage.extend(getattr(bases[0], attr, ()))
+            storage = list(getattr(bases[0], attr, ()))
             storage.extend(d.get(attr, ()))
             assert len(bases) == 1, 'multiple inheritance not allowed'
             assert len(storage) == len(set(storage)), 'layout conflict'
@@ -188,8 +187,7 @@ class Node(with_metaclass(NodeType, object)):
         for child in self.iter_child_nodes():
             if isinstance(child, node_type):
                 yield child
-            for result in child.find_all(node_type):
-                yield result
+            yield from child.find_all(node_type)
 
     def set_ctx(self, ctx):
         """Reset the context of a node and all child nodes.  Per default the
@@ -210,9 +208,8 @@ class Node(with_metaclass(NodeType, object)):
         todo = deque([self])
         while todo:
             node = todo.popleft()
-            if 'lineno' in node.attributes:
-                if node.lineno is None or override:
-                    node.lineno = lineno
+            if 'lineno' in node.attributes and (node.lineno is None or override):
+                node.lineno = lineno
             todo.extend(node.iter_child_nodes())
         return self
 
@@ -248,7 +245,7 @@ class Node(with_metaclass(NodeType, object)):
                 buf.append(repr(node))
                 return
 
-            buf.append('nodes.%s(' % node.__class__.__name__)
+            buf.append(f'nodes.{node.__class__.__name__}(')
             if not node.fields:
                 buf.append(')')
                 return
@@ -266,6 +263,7 @@ class Node(with_metaclass(NodeType, object)):
                 else:
                     _dump(value)
             buf.append(')')
+
         buf = []
         _dump(self)
         return ''.join(buf)
@@ -520,9 +518,7 @@ class TemplateData(Literal):
         eval_ctx = get_eval_context(self, eval_ctx)
         if eval_ctx.volatile:
             raise Impossible()
-        if eval_ctx.autoescape:
-            return Markup(self.data)
-        return self.data
+        return Markup(self.data) if eval_ctx.autoescape else self.data
 
 
 class Tuple(Literal):
@@ -537,10 +533,7 @@ class Tuple(Literal):
         return tuple(x.as_const(eval_ctx) for x in self.items)
 
     def can_assign(self):
-        for item in self.items:
-            if not item.can_assign():
-                return False
-        return True
+        return all(item.can_assign() for item in self.items)
 
 
 class List(Literal):
@@ -611,7 +604,7 @@ def args_as_const(node, eval_ctx):
 
     if node.dyn_kwargs is not None:
         try:
-            kwargs.update(node.dyn_kwargs.as_const(eval_ctx))
+            kwargs |= node.dyn_kwargs.as_const(eval_ctx)
         except Exception:
             raise Impossible()
 
@@ -746,9 +739,8 @@ class Slice(Expr):
     def as_const(self, eval_ctx=None):
         eval_ctx = get_eval_context(self, eval_ctx)
         def const(obj):
-            if obj is None:
-                return None
-            return obj.as_const(eval_ctx)
+            return None if obj is None else obj.as_const(eval_ctx)
+
         return slice(const(self.start), const(self.stop), const(self.step))
 
 
@@ -787,9 +779,14 @@ class Operand(Helper):
     fields = ('op', 'expr')
 
 if __debug__:
-    Operand.__doc__ += '\nThe following operators are available: ' + \
-        ', '.join(sorted('``%s``' % x for x in set(_binop_to_func) |
-                  set(_uaop_to_func) | set(_cmpop_to_func)))
+    Operand.__doc__ += '\nThe following operators are available: ' + ', '.join(
+        sorted(
+            f'``{x}``'
+            for x in set(_binop_to_func)
+            | set(_uaop_to_func)
+            | set(_cmpop_to_func)
+        )
+    )
 
 
 class Mul(BinExpr):
@@ -927,9 +924,7 @@ class MarkSafeIfAutoescape(Expr):
         if eval_ctx.volatile:
             raise Impossible()
         expr = self.expr.as_const(eval_ctx)
-        if eval_ctx.autoescape:
-            return Markup(expr)
-        return expr
+        return Markup(expr) if eval_ctx.autoescape else expr
 
 
 class ContextReference(Expr):

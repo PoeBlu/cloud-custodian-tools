@@ -10,8 +10,7 @@ async def auto_to_seq(value):
         async for item in value:
             seq.append(item)
     else:
-        for item in value:
-            seq.append(item)
+        seq.extend(iter(value))
     return seq
 
 
@@ -40,9 +39,7 @@ def dualfilter(normal_filter, async_filter):
         b = is_async(args)
         if wrap_evalctx:
             args = args[1:]
-        if b:
-            return async_filter(*args, **kwargs)
-        return normal_filter(*args, **kwargs)
+        return async_filter(*args, **kwargs) if b else normal_filter(*args, **kwargs)
 
     if wrap_evalctx:
         wrapper.evalcontextfilter = True

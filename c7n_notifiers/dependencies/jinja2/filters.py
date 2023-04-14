@@ -107,9 +107,10 @@ def do_urlencode(value):
             pass
     if itemiter is None:
         return unicode_urlencode(value)
-    return u'&'.join(unicode_urlencode(k) + '=' +
-                     unicode_urlencode(v, for_qs=True)
-                     for k, v in itemiter)
+    return u'&'.join(
+        f'{unicode_urlencode(k)}={unicode_urlencode(v, for_qs=True)}'
+        for k, v in itemiter
+    )
 
 
 @evalcontextfilter
@@ -175,12 +176,12 @@ def do_xmlattr(_eval_ctx, d, autospace=True):
     if the filter returned something unless the second parameter is false.
     """
     rv = u' '.join(
-        u'%s="%s"' % (escape(key), escape(value))
+        f'{escape(key)}="{escape(value)}"'
         for key, value in iteritems(d)
         if value is not None and not isinstance(value, Undefined)
     )
     if autospace and rv:
-        rv = u' ' + rv
+        rv = f' {rv}'
     if _eval_ctx.autoescape:
         rv = Markup(rv)
     return rv
@@ -272,8 +273,9 @@ def do_sort(
        The `attribute` parameter was added.
     """
     key_func = make_attrgetter(
-        environment, attribute,
-        postprocess=ignore_case if not case_sensitive else None
+        environment,
+        attribute,
+        postprocess=None if case_sensitive else ignore_case,
     )
     return sorted(value, key=key_func, reverse=reverse)
 
@@ -294,8 +296,9 @@ def do_unique(environment, value, case_sensitive=False, attribute=None):
     :param attribute: Filter objects with unique values for this attribute.
     """
     getter = make_attrgetter(
-        environment, attribute,
-        postprocess=ignore_case if not case_sensitive else None
+        environment,
+        attribute,
+        postprocess=None if case_sensitive else ignore_case,
     )
     seen = set()
 
@@ -316,8 +319,7 @@ def _min_or_max(environment, value, func, case_sensitive, attribute):
         return environment.undefined('No aggregated item, sequence was empty.')
 
     key_func = make_attrgetter(
-        environment, attribute,
-        ignore_case if not case_sensitive else None
+        environment, attribute, None if case_sensitive else ignore_case
     )
     return func(chain([first], it), key=key_func)
 
@@ -414,10 +416,7 @@ def do_join(eval_ctx, value, d=u'', attribute=None):
                 do_escape = True
             else:
                 value[idx] = text_type(item)
-        if do_escape:
-            d = escape(d)
-        else:
-            d = text_type(d)
+        d = escape(d) if do_escape else text_type(d)
         return d.join(value)
 
     # no html involved, to normal joining
@@ -463,7 +462,7 @@ def do_filesizeformat(value, binary=False):
     prefixes are used (Mebi, Gibi).
     """
     bytes = float(value)
-    base = binary and 1024 or 1000
+    base = 1024 if binary else 1000
     prefixes = [
         (binary and 'KiB' or 'kB'),
         (binary and 'MiB' or 'MB'),
@@ -601,8 +600,8 @@ def do_truncate(env, s, length=255, killwords=False, end='...', leeway=None):
     """
     if leeway is None:
         leeway = env.policies['truncate.leeway']
-    assert length >= len(end), 'expected length >= %s, got %s' % (len(end), length)
-    assert leeway >= 0, 'expected leeway >= 0, got %s' % leeway
+    assert length >= len(end), f'expected length >= {len(end)}, got {length}'
+    assert leeway >= 0, f'expected leeway >= 0, got {leeway}'
     if len(s) <= length + leeway:
         return s
     if killwords:
@@ -648,9 +647,7 @@ def do_int(value, default=0, base=10):
     The base is ignored for decimal numbers and non-string values.
     """
     try:
-        if isinstance(value, string_types):
-            return int(value, base)
-        return int(value)
+        return int(value, base) if isinstance(value, string_types) else int(value)
     except (TypeError, ValueError):
         # this quirk is necessary so that "42.23"|int gives 42.
         try:
@@ -791,7 +788,7 @@ def do_round(value, precision=0, method='common'):
         {{ 42.55|round|int }}
             -> 43
     """
-    if not method in ('common', 'ceil', 'floor'):
+    if method not in ('common', 'ceil', 'floor'):
         raise FilterArgumentError('method must be common, ceil or floor')
     if method == 'common':
         return round(value, precision)

@@ -61,10 +61,7 @@ def new_context(environment, template_name, blocks, vars=None,
     """Internal helper to for context creation."""
     if vars is None:
         vars = {}
-    if shared:
-        parent = vars
-    else:
-        parent = dict(globals or (), **vars)
+    parent = vars if shared else dict(globals or (), **vars)
     if locals:
         # if the parent is shared a copy should be created because
         # we don't want to modify the dict passed
@@ -125,9 +122,7 @@ class ContextMeta(type):
 def resolve_or_missing(context, key, missing=missing):
     if key in context.vars:
         return context.vars[key]
-    if key in context.parent:
-        return context.parent[key]
-    return missing
+    return context.parent[key] if key in context.parent else missing
 
 
 class Context(with_metaclass(ContextMeta)):
@@ -165,7 +160,7 @@ class Context(with_metaclass(ContextMeta)):
         # create the initial mapping of blocks.  Whenever template inheritance
         # takes place the runtime will update this mapping with the new blocks
         # from the template.
-        self.blocks = dict((k, [v]) for k, v in iteritems(blocks))
+        self.blocks = {k: [v] for k, v in iteritems(blocks)}
 
         # In case we detect the fast resolve mode we can set up an alias
         # here that bypasses the legacy code logic.
@@ -201,9 +196,7 @@ class Context(with_metaclass(ContextMeta)):
             rv = resolve_or_missing(self, key)
         else:
             rv = self.resolve_or_missing(key)
-        if rv is missing:
-            return self.environment.undefined(name=key)
-        return rv
+        return self.environment.undefined(name=key) if rv is missing else rv
 
     def resolve_or_missing(self, key):
         """Resolves a variable like :meth:`resolve` but returns the
@@ -218,7 +211,7 @@ class Context(with_metaclass(ContextMeta)):
 
     def get_exported(self):
         """Get a new dict with the exported variables."""
-        return dict((k, self.vars[k]) for k in self.exported_vars)
+        return {k: self.vars[k] for k in self.exported_vars}
 
     def get_all(self):
         """Return the complete context as dict including the exported
@@ -227,9 +220,7 @@ class Context(with_metaclass(ContextMeta)):
         """
         if not self.vars:
             return self.parent
-        if not self.parent:
-            return self.vars
-        return dict(self.parent, **self.vars)
+        return dict(self.parent, **self.vars) if self.parent else self.vars
 
     @internalcode
     def call(__self, __obj, *args, **kwargs):
@@ -582,10 +573,7 @@ class Macro(object):
         return rv
 
     def __repr__(self):
-        return '<%s %s>' % (
-            self.__class__.__name__,
-            self.name is None and 'anonymous' or repr(self.name)
-        )
+        return f"<{self.__class__.__name__} {self.name is None and 'anonymous' or repr(self.name)}>"
 
 
 @implements_to_string
@@ -663,8 +651,7 @@ class Undefined(object):
         return 0
 
     def __iter__(self):
-        if 0:
-            yield None
+        pass
 
     def __nonzero__(self):
         return False
@@ -704,15 +691,11 @@ def make_logging_undefined(logger=None, base=None):
     def _log_message(undef):
         if undef._undefined_hint is None:
             if undef._undefined_obj is missing:
-                hint = '%s is undefined' % undef._undefined_name
+                hint = f'{undef._undefined_name} is undefined'
             elif not isinstance(undef._undefined_name, string_types):
-                hint = '%s has no element %s' % (
-                    object_type_repr(undef._undefined_obj),
-                    undef._undefined_name)
+                hint = f'{object_type_repr(undef._undefined_obj)} has no element {undef._undefined_name}'
             else:
-                hint = '%s has no attribute %s' % (
-                    object_type_repr(undef._undefined_obj),
-                    undef._undefined_name)
+                hint = f'{object_type_repr(undef._undefined_obj)} has no attribute {undef._undefined_name}'
         else:
             hint = undef._undefined_hint
         logger.warning('Template variable warning: %s', hint)

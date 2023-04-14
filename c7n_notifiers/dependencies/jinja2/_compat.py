@@ -77,9 +77,7 @@ else:
         return cls
 
     def encode_filename(filename):
-        if isinstance(filename, unicode):
-            return filename.encode('utf-8')
-        return filename
+        return filename.encode('utf-8') if isinstance(filename, unicode) else filename
 
 
 def with_metaclass(meta, *bases):

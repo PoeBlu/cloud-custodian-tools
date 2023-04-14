@@ -30,11 +30,9 @@ class Composer:
         # Drop the STREAM-START event.
         self.get_event()
 
-        # Compose a document if the stream is not empty.
-        document = None
-        if not self.check_event(StreamEndEvent):
-            document = self.compose_document()
-
+        document = (
+            None if self.check_event(StreamEndEvent) else self.compose_document()
+        )
         # Ensure that the stream contains no more documents.
         if not self.check_event(StreamEndEvent):
             event = self.get_event()
@@ -70,11 +68,10 @@ class Composer:
             return self.anchors[anchor]
         event = self.peek_event()
         anchor = event.anchor
-        if anchor is not None:
-            if anchor in self.anchors:
-                raise ComposerError("found duplicate anchor %r; first occurence"
-                        % anchor, self.anchors[anchor].start_mark,
-                        "second occurence", event.start_mark)
+        if anchor is not None and anchor in self.anchors:
+            raise ComposerError("found duplicate anchor %r; first occurence"
+                    % anchor, self.anchors[anchor].start_mark,
+                    "second occurence", event.start_mark)
         self.descend_resolver(parent, index)
         if self.check_event(ScalarEvent):
             node = self.compose_scalar_node(anchor)

@@ -10,7 +10,7 @@ logger = logging.getLogger('c7n_notifiers')
 logger.setLevel(logging.INFO)
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-MAPPINGS_FILE_PATH = current_dir + "/resource_mappings.yaml"
+MAPPINGS_FILE_PATH = f"{current_dir}/resource_mappings.yaml"
 
 
 def get_mappings(file_path=MAPPINGS_FILE_PATH):
@@ -33,14 +33,11 @@ def get_datetime(datetime_string):
             )
         except ValueError:
             logger.debug(
-                "datetime pattern {} did not work for datetime "
-                "string {}".format(pattern, datetime_string)
+                f"datetime pattern {pattern} did not work for datetime string {datetime_string}"
             )
     if dt_obj is None:
         raise RuntimeError(
-            "Unable to convert {} into dattetime object".format(
-                datetime_string
-            )
+            f"Unable to convert {datetime_string} into dattetime object"
         )
     return dt_obj
 
@@ -80,6 +77,6 @@ def get_resource_info(resource_type, resource_data, region,
             resource_mappings['url']
         ).substitute(resource_info)
 
-    logger.debug("resource_info: {}".format(resource_info))
+    logger.debug(f"resource_info: {resource_info}")
 
     return resource_info

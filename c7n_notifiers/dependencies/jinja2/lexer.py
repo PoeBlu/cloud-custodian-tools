@@ -259,10 +259,7 @@ class Token(tuple):
 
     def test_any(self, *iterable):
         """Test against multiple token expressions."""
-        for expr in iterable:
-            if self.test(expr):
-                return True
-        return False
+        return any(self.test(expr) for expr in iterable)
 
     def __repr__(self):
         return 'Token(%r, %r, %r)' % (
@@ -332,7 +329,7 @@ class TokenStream(object):
 
     def skip(self, n=1):
         """Got n tokens ahead."""
-        for x in range(n):
+        for _ in range(n):
             next(self)
 
     def next_if(self, expr):
@@ -441,7 +438,7 @@ class Lexer(object):
         root_tag_rules = compile_rules(environment)
 
         # block suffix if trimming is enabled
-        block_suffix_re = environment.trim_blocks and '\\n?' or ''
+        block_suffix_re = '\\n?' if environment.trim_blocks else ''
 
         # strip leading spaces if lstrip_blocks is enabled
         prefix_re = {}
@@ -449,17 +446,17 @@ class Lexer(object):
             # use '{%+' to manually disable lstrip_blocks behavior
             no_lstrip_re = e('+')
             # detect overlap between block and variable or comment strings
-            block_diff = c(r'^%s(.*)' % e(environment.block_start_string))
+            block_diff = c(f'^{e(environment.block_start_string)}(.*)')
             # make sure we don't mistake a block for a variable or a comment
             m = block_diff.match(environment.comment_start_string)
-            no_lstrip_re += m and r'|%s' % e(m.group(1)) or ''
+            no_lstrip_re += m and f'|{e(m.group(1))}' or ''
             m = block_diff.match(environment.variable_start_string)
-            no_lstrip_re += m and r'|%s' % e(m.group(1)) or ''
+            no_lstrip_re += m and f'|{e(m.group(1))}' or ''
 
             # detect overlap between comment and variable strings
-            comment_diff = c(r'^%s(.*)' % e(environment.comment_start_string))
+            comment_diff = c(f'^{e(environment.comment_start_string)}(.*)')
             m = comment_diff.match(environment.variable_start_string)
-            no_variable_re = m and r'(?!%s)' % e(m.group(1)) or ''
+            no_variable_re = m and f'(?!{e(m.group(1))})' or ''
 
             lstrip_re = r'^[ \t]*'
             block_prefix_re = r'%s%s(?!%s)|%s\+?' % (
@@ -477,7 +474,7 @@ class Lexer(object):
             prefix_re['block'] = block_prefix_re
             prefix_re['comment'] = comment_prefix_re
         else:
-            block_prefix_re = '%s' % e(environment.block_start_string)
+            block_prefix_re = f'{e(environment.block_start_string)}'
 
         self.newline_sequence = environment.newline_sequence
         self.keep_trailing_newline = environment.keep_trailing_newline
@@ -613,7 +610,7 @@ class Lexer(object):
         stack = ['root']
         if state is not None and state != 'root':
             assert state in ('variable', 'block'), 'invalid state'
-            stack.append(state + '_begin')
+            stack.append(f'{state}_begin')
         else:
             state = 'root'
         statetokens = self.rules[stack[-1]]
@@ -634,7 +631,7 @@ class Lexer(object):
                 # is the operator rule. do this only if the end tags look
                 # like operators
                 if balancing_stack and \
-                   tokens in ('variable_end', 'block_end',
+                       tokens in ('variable_end', 'block_end',
                               'linestatement_end'):
                     continue
 

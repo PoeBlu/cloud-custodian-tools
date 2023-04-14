@@ -43,9 +43,7 @@ if PY2:
         return cls
 
     def get_methods(cls):
-        for name, method in inspect.getmembers(cls,
-                                               predicate=inspect.ismethod):
-            yield name, method
+        yield from inspect.getmembers(cls, predicate=inspect.ismethod)
 
 else:
     text_type = str
@@ -60,6 +58,4 @@ else:
         return cls
 
     def get_methods(cls):
-        for name, method in inspect.getmembers(cls,
-                                               predicate=inspect.isfunction):
-            yield name, method
+        yield from inspect.getmembers(cls, predicate=inspect.isfunction)
